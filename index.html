@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mark's Outreach Tool</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --bg-secondary: #f5f5f3;
+      --bg-tertiary: #eeede8;
+      --text: #1a1a18;
+      --text-secondary: #6b6b68;
+      --text-tertiary: #9b9b97;
+      --border: rgba(0,0,0,0.12);
+      --border-mid: rgba(0,0,0,0.2);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --info-bg: #e6f1fb;
+      --info-text: #185fa5;
+      --success-bg: #eaf3de;
+      --success-text: #3b6d11;
+      --warn-bg: #faeeda;
+      --warn-text: #854f0b;
+      --danger-bg: #fcebeb;
+      --danger-text: #a32d2d;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --mono: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1e1e1c;
+        --bg-secondary: #2a2a28;
+        --bg-tertiary: #333331;
+        --text: #f0efe9;
+        --text-secondary: #a8a8a4;
+        --text-tertiary: #6b6b68;
+        --border: rgba(255,255,255,0.1);
+        --border-mid: rgba(255,255,255,0.18);
+        --info-bg: #0c3d6b;
+        --info-text: #85b7eb;
+        --success-bg: #1a3a08;
+        --success-text: #97c459;
+        --warn-bg: #3d2a05;
+        --warn-text: #ef9f27;
+        --danger-bg: #3d1010;
+        --danger-text: #f09595;
+      }
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg-tertiary);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .topbar {
+      background: var(--bg);
+      border-bottom: 0.5px solid var(--border);
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 52px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .topbar-brand {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .topbar-brand span {
+      color: var(--text-tertiary);
+      font-weight: 400;
+    }
+
+    .nav {
+      display: flex;
+      gap: 4px;
+    }
+
+    .nav-btn {
+      padding: 5px 14px;
+      font-size: 13px;
+      border: 0.5px solid transparent;
+      border-radius: var(--radius-md);
+      background: transparent;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-family: var(--font);
+      transition: background 0.15s;
+    }
+
+    .nav-btn:hover { background: var(--bg-secondary); }
+    .nav-btn.active {
+      background: var(--bg-secondary);
+      color: var(--text);
+      border-color: var(--border-mid);
+      font-weight: 500;
+    }
+
+    .main { max-width: 780px; margin: 0 auto; padding: 2rem 1.5rem; min-height: calc(100vh - 52px); }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .card {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+    .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+
+    @media (max-width: 600px) {
+      .grid-2, .grid-4, .grid-2-1 { grid-template-columns: 1fr; }
+    }
+
+    .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+    .field:last-child { margin-bottom: 0; }
+
+    label { font-size: 11px; font-weight: 500; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    input, select, textarea {
+      width: 100%;
+      font-family: var(--font);
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+      border: 0.5px solid var(--border-mid);
+      border-radius: var(--radius-md);
+      padding: 8px 10px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input:focus, select:focus, textarea:focus { border-color: var(--text-secondary); }
+    textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+    select { cursor: pointer; }
+
+    .btn {
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: var(--radius-md);
+      border: 0.5px solid var(--border-mid);
+      background: transparent;
+      color: var(--text);
+      font-family: var(--font);
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn:hover { background: var(--bg-secondary); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-full { width: 100%; padding: 10px; margin-top: 8px; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+    .btn-primary {
+      background: var(--text);
+      color: var(--bg);
+      border-color: var(--text);
+    }
+    .btn-primary:hover { opacity: 0.85; background: var(--text); }
+
+    .tabs { display: flex; gap: 8px; margin-bottom: 1rem; }
+    .tab {
+      padding: 6px 16px;
+      font-size: 13px;
+      border: 0.5px solid var(--border-mid);
+      border-radius: var(--radius-md);
+      background: transparent;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-family: var(--font);
+    }
+    .tab.active {
+      background: var(--bg-secondary);
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .output-box {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+      font-size: 14px;
+      line-height: 1.75;
+      color: var(--text);
+      white-space: pre-wrap;
+      min-height: 120px;
+    }
+
+    .output-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 13px; height: 13px;
+      border: 2px solid var(--border-mid);
+      border-top-color: var(--text);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 5px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .status {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 22px;
+      margin: 6px 0;
+    }
+
+    .status.error { color: var(--danger-text); }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: var(--radius-md);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .badge-hubspot { background: var(--info-bg); color: var(--info-text); }
+    .badge-frontend { background: var(--success-bg); color: var(--success-text); }
+    .badge-agency { background: var(--warn-bg); color: var(--warn-text); }
+    .badge-freelance { background: var(--danger-bg); color: var(--danger-text); }
+
+    .lead-card {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.25rem;
+      margin-bottom: 10px;
+    }
+
+    .lead-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .lead-company { font-size: 15px; font-weight: 500; }
+    .lead-signal { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .lead-why { font-size: 13px; color: var(--text-secondary); line-height: 1.65; margin-bottom: 10px; }
+    .lead-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .prospect-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 0.5px solid var(--border);
+    }
+    .prospect-row:last-child { border-bottom: none; }
+
+    .avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--info-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--info-text);
+      flex-shrink: 0;
+    }
+
+    .prospect-info { flex: 1; min-width: 0; }
+    .prospect-name { font-size: 14px; font-weight: 500; }
+    .prospect-meta { font-size: 12px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .status-select {
+      font-size: 12px;
+      padding: 3px 6px;
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      width: auto;
+      font-family: var(--font);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-tertiary);
+      font-size: 14px;
+    }
+
+    .research-box {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+      margin-top: 6px;
+    }
+
+    .inline-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .tracker-stats {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .stat-card {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px;
+      text-align: center;
+    }
+
+    .stat-num { font-size: 22px; font-weight: 500; }
+    .stat-label { font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    Mantis Outreach <span>/ Mark Wroblewski</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+  <select id="modelSelect" style="font-size:12px;padding:4px 8px;border:0.5px solid rgba(0,0,0,0.2);border-radius:8px;background:#f5f5f3;color:#6b6b68;font-family:inherit;cursor:pointer;">
+    <option value="claude-haiku-4-5-20251001" selected>Haiku (fast)</option>
+    <option value="claude-sonnet-4-20250514">Sonnet (best)</option>
+  </select>
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showView('generate')">Generate</button>
+    <button class="nav-btn" onclick="showView('find')">Find prospects</button>
+    <button class="nav-btn" onclick="showView('tracker')">Tracker</button>
+  </nav>
+  </div>
+</div>
+
+<main class="main">
+
+  <!-- ===== GENERATE ===== -->
+  <div id="view-generate" class="view active">
+    <div class="card">
+      <span class="section-label">Prospect details</span>
+      <div class="grid-2" style="margin-bottom:12px;">
+        <div class="field">
+          <label>Opportunity type</label>
+          <select id="targetType">
+            <option value="hubspot_agency">HubSpot agency / partner</option>
+            <option value="hubspot_hire">Company hiring HubSpot dev</option>
+            <option value="frontend_hire">Company hiring front-end dev</option>
+            <option value="frontend_agency">Web / digital agency</option>
+            <option value="freelance">Freelance / contract gig</option>
+            <option value="startup">Startup needing dev work</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Company name</label>
+          <input type="text" id="companyName" placeholder="e.g. Orbit Agency" />
+        </div>
+      </div>
+      <div class="grid-2" style="margin-bottom:12px;">
+        <div class="field">
+          <label>Contact name</label>
+          <input type="text" id="contactName" placeholder="e.g. Sarah Chen" />
+        </div>
+        <div class="field">
+          <label>Their role</label>
+          <input type="text" id="contactRole" placeholder="e.g. Head of Engineering" />
+        </div>
+      </div>
+      <div class="field">
+        <div class="inline-row">
+          <label>What do you know about them?</label>
+          <button class="btn btn-sm" id="researchBtn" onclick="researchProspect()">Research with AI ↗</button>
+        </div>
+        <textarea id="context" placeholder="e.g. React stack, recently rebranded, open role on LinkedIn, HubSpot Platinum partner..."></textarea>
+      </div>
+      <div class="status" id="researchStatus"></div>
+      <div id="researchOutput" style="display:none; margin-bottom:12px;">
+        <div class="inline-row" style="margin-bottom:0;">
+          <label>AI research summary</label>
+          <button class="btn btn-sm" onclick="useResearch()">Use as context ↗</button>
+        </div>
+        <div class="research-box" id="researchText"></div>
+      </div>
+      <div class="field">
+        <label>Opportunity angle (optional)</label>
+        <input type="text" id="angle" placeholder="e.g. They're hiring full-time but I could start as a contractor faster" />
+      </div>
+      <button class="btn btn-full btn-primary" id="genBtn" onclick="generate()">Generate outreach ↗</button>
+    </div>
+
+    <div class="status" id="genStatus"></div>
+
+    <div id="outputSection" style="display:none;">
+      <div class="tabs">
+        <button class="tab active" id="tabEmail" onclick="switchTab('email')">Cold email</button>
+        <button class="tab" id="tabLinkedin" onclick="switchTab('linkedin')">LinkedIn DM</button>
+      </div>
+      <div class="card" style="padding:1rem;">
+        <div class="output-header">
+          <span class="section-label" style="margin:0;" id="outputLabel">Cold email</span>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-sm" onclick="copyOutput()">Copy</button>
+            <button class="btn btn-sm" onclick="saveCurrentProspect()">Save to tracker ↗</button>
+          </div>
+        </div>
+        <div class="output-box" id="outputText"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== FIND ===== -->
+  <div id="view-find" class="view">
+    <div class="card">
+      <span class="section-label">Search for leads</span>
+      <div class="grid-2" style="margin-bottom:12px;">
+        <div class="field">
+          <label>Role type</label>
+          <select id="findType">
+            <option value="frontend_dev">Front-end developer (remote)</option>
+            <option value="hubspot_dev">HubSpot developer</option>
+            <option value="both">HubSpot + front-end</option>
+            <option value="react_dev">React / Next.js developer</option>
+            <option value="cms_dev">CMS / web developer</option>
+            <option value="agency_contractor">Agency contractor / freelance</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Work arrangement</label>
+          <select id="findArrangement">
+            <option value="remote">Remote only</option>
+            <option value="hybrid">Remote or hybrid</option>
+            <option value="freelance">Freelance / contract</option>
+            <option value="any">Any arrangement</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Company type</label>
+          <select id="findCompanyType">
+            <option value="any">Any</option>
+            <option value="agency">Agencies / studios</option>
+            <option value="saas">SaaS companies</option>
+            <option value="startup">Startups</option>
+            <option value="enterprise">Enterprise / mid-market</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Stack focus</label>
+          <select id="findStack">
+            <option value="any">Any stack</option>
+            <option value="hubspot">HubSpot CMS</option>
+            <option value="react">React / Next.js</option>
+            <option value="jamstack">JAMstack / headless</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Industry or niche (optional)</label>
+        <input type="text" id="findNiche" placeholder="e.g. fintech, B2B SaaS, e-commerce, healthcare..." />
+      </div>
+      <button class="btn btn-full btn-primary" id="findBtn" onclick="findProspects()">Find prospects ↗</button>
+    </div>
+    <div class="status" id="findStatus"></div>
+    <div id="leadsOutput"></div>
+  </div>
+
+  <!-- ===== TRACKER ===== -->
+  <div id="view-tracker" class="view">
+    <div class="tracker-stats" id="trackerStats"></div>
+    <div class="card" id="prospectList">
+      <div class="empty-state">No prospects saved yet.</div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  const API = '/api/claude';
+
+  let emailOutput = '', linkedinOutput = '', activeTab = 'email', researchSummary = '', prospects = [];
+
+  function loadProspects() {
+    try { prospects = JSON.parse(localStorage.getItem('mw_prospects_v1') || '[]'); } catch(e) { prospects = []; }
+  }
+
+  function persist() {
+    localStorage.setItem('mw_prospects_v1', JSON.stringify(prospects));
+  }
+
+  function showView(v) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+    document.getElementById('view-' + v).classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach((b, i) => {
+      b.classList.toggle('active', ['generate','find','tracker'][i] === v);
+    });
+    if (v === 'tracker') renderTracker();
+  }
+
+  function switchTab(tab) {
+    activeTab = tab;
+    document.getElementById('tabEmail').className = 'tab' + (tab === 'email' ? ' active' : '');
+    document.getElementById('tabLinkedin').className = 'tab' + (tab === 'linkedin' ? ' active' : '');
+    document.getElementById('outputLabel').textContent = tab === 'email' ? 'Cold email' : 'LinkedIn DM';
+    document.getElementById('outputText').textContent = tab === 'email' ? emailOutput : linkedinOutput;
+  }
+
+  function copyOutput() {
+    navigator.clipboard.writeText(activeTab === 'email' ? emailOutput : linkedinOutput).then(() => {
+      const btn = document.querySelectorAll('#outputSection .btn-sm')[0];
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 1500);
+    });
+  }
+
+  function getInitials(name) {
+    return name ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '?';
+  }
+
+  function badgeInfo(type) {
+    const map = {
+      hubspot_agency: ['HubSpot Agency', 'badge-hubspot'],
+      hubspot_hire:   ['HubSpot Hire', 'badge-hubspot'],
+      hubspot_dev:    ['HubSpot Dev', 'badge-hubspot'],
+      frontend_hire:  ['Front-end Hire', 'badge-frontend'],
+      frontend_agency:['Web Agency', 'badge-frontend'],
+      frontend_dev:   ['Front-end Dev', 'badge-frontend'],
+      react_dev:      ['React Dev', 'badge-frontend'],
+      cms_dev:        ['CMS Dev', 'badge-frontend'],
+      both:           ['HubSpot + FE', 'badge-hubspot'],
+      freelance:      ['Freelance', 'badge-freelance'],
+      agency_contractor:['Agency', 'badge-agency'],
+      startup:        ['Startup', 'badge-agency'],
+    };
+    return map[type] || ['Lead', 'badge-frontend'];
+  }
+
+  async function saveCurrentProspect() {
+    const p = {
+      id: Date.now(),
+      targetType: document.getElementById('targetType').value,
+      companyName: document.getElementById('companyName').value || 'Unknown',
+      contactName: document.getElementById('contactName').value || '',
+      contactRole: document.getElementById('contactRole').value || '',
+      context: document.getElementById('context').value || '',
+      email: emailOutput,
+      linkedin: linkedinOutput,
+      status: 'not_contacted',
+      savedAt: new Date().toLocaleDateString()
+    };
+    prospects.unshift(p);
+    persist();
+    const btn = document.querySelectorAll('#outputSection .btn-sm')[1];
+    btn.textContent = 'Saved!';
+    setTimeout(() => btn.textContent = 'Save to tracker ↗', 1500);
+  }
+
+  async function saveLeadToTracker(idx) {
+    const cards = document.querySelectorAll('.lead-card');
+    const card = cards[idx];
+    prospects.unshift({
+      id: Date.now(),
+      targetType: card.dataset.type || 'frontend_hire',
+      companyName: card.querySelector('.lead-company').textContent,
+      contactName: '',
+      contactRole: card.dataset.role || '',
+      context: card.querySelector('.lead-why').textContent,
+      email: '', linkedin: '',
+      status: 'not_contacted',
+      savedAt: new Date().toLocaleDateString()
+    });
+    persist();
+    const btn = card.querySelectorAll('.btn-sm')[1];
+    btn.textContent = 'Saved!'; btn.disabled = true;
+  }
+
+  function loadIntoGenerator(idx) {
+    const cards = document.querySelectorAll('.lead-card');
+    const card = cards[idx];
+    document.getElementById('companyName').value = card.querySelector('.lead-company').textContent;
+    document.getElementById('context').value = card.querySelector('.lead-why').textContent;
+    document.getElementById('targetType').value = card.dataset.type || 'frontend_hire';
+    document.getElementById('contactRole').value = card.dataset.role || '';
+    document.getElementById('contactName').value = '';
+    emailOutput = ''; linkedinOutput = '';
+    document.getElementById('outputSection').style.display = 'none';
+    showView('generate');
+  }
+
+  function renderTracker() {
+    const statuses = ['not_contacted','contacted','replied','call_booked','passed'];
+    const labels = ['Not contacted','Contacted','Replied','Call booked','Passed'];
+    const stats = document.getElementById('trackerStats');
+    stats.innerHTML = statuses.map((s, i) => {
+      const count = prospects.filter(p => p.status === s).length;
+      return `<div class="stat-card">
+        <div class="stat-num">${count}</div>
+        <div class="stat-label">${labels[i]}</div>
+      </div>`;
+    }).join('');
+
+    const el = document.getElementById('prospectList');
+    if (!prospects.length) {
+      el.innerHTML = '<div class="empty-state">No prospects saved yet.</div>';
+      return;
+    }
+    el.innerHTML = prospects.map(p => {
+      const [label, cls] = badgeInfo(p.targetType);
+      return `<div class="prospect-row">
+        <div class="avatar">${getInitials(p.contactName || p.companyName)}</div>
+        <div class="prospect-info">
+          <div class="prospect-name">${p.companyName}${p.contactName ? ' — ' + p.contactName : ''}</div>
+          <div class="prospect-meta">${p.contactRole || ''}${p.contactRole && p.savedAt ? ' · ' : ''}${p.savedAt || ''}</div>
+        </div>
+        <span class="badge ${cls}">${label}</span>
+        <select class="status-select" onchange="updateStatus(${p.id}, this.value)">
+          <option value="not_contacted" ${p.status==='not_contacted'?'selected':''}>Not contacted</option>
+          <option value="contacted" ${p.status==='contacted'?'selected':''}>Contacted</option>
+          <option value="replied" ${p.status==='replied'?'selected':''}>Replied</option>
+          <option value="call_booked" ${p.status==='call_booked'?'selected':''}>Call booked</option>
+          <option value="passed" ${p.status==='passed'?'selected':''}>Passed</option>
+        </select>
+        <button class="btn btn-sm" onclick="viewProspect(${p.id})">View</button>
+        <button class="btn btn-sm" style="color:var(--danger-text)" onclick="deleteProspect(${p.id})">Del</button>
+      </div>`;
+    }).join('');
+  }
+
+  function updateStatus(id, status) {
+    const p = prospects.find(x => x.id === id);
+    if (p) { p.status = status; persist(); renderTracker(); }
+  }
+
+  function deleteProspect(id) {
+    if (!confirm('Delete this prospect?')) return;
+    prospects = prospects.filter(x => x.id !== id);
+    persist(); renderTracker();
+  }
+
+  function viewProspect(id) {
+    const p = prospects.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById('companyName').value = p.companyName;
+    document.getElementById('contactName').value = p.contactName;
+    document.getElementById('contactRole').value = p.contactRole;
+    document.getElementById('targetType').value = p.targetType;
+    document.getElementById('context').value = p.context;
+    emailOutput = p.email || ''; linkedinOutput = p.linkedin || '';
+    if (emailOutput || linkedinOutput) {
+      document.getElementById('outputSection').style.display = 'block';
+      document.getElementById('outputText').textContent = activeTab === 'email' ? emailOutput : linkedinOutput;
+    }
+    showView('generate');
+  }
+
+  async function callAPI(body) {
+    const r = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error(`API error ${r.status}`);
+    return r.json();
+  }
+
+  async function researchProspect() {
+    const company = document.getElementById('companyName').value;
+    if (!company) { alert('Enter a company name first.'); return; }
+    const btn = document.getElementById('researchBtn');
+    btn.disabled = true; btn.textContent = 'Researching...';
+    document.getElementById('researchStatus').innerHTML = '<span class="spinner"></span> Researching ' + company + '...';
+    document.getElementById('researchOutput').style.display = 'none';
+
+    try {
+      const data = await callAPI({
+        model: document.getElementById('modelSelect').value,
+        max_tokens: 600,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{ role: 'user', content: `Research "${company}" as a prospect for Mark Wroblewski — a developer with 7+ years HubSpot CMS experience plus strong front-end skills (React, JavaScript, CSS/SASS, Node.js, API integrations). Search for: what they do, their tech stack, any open dev roles or contractor needs, and 2–3 specific talking points Mark could use. Under 200 words, practical and specific.` }]
+      });
+      researchSummary = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+      document.getElementById('researchText').textContent = researchSummary;
+      document.getElementById('researchOutput').style.display = 'block';
+      document.getElementById('researchStatus').innerHTML = '';
+    } catch(e) {
+      document.getElementById('researchStatus').innerHTML = '<span class="error">Research failed: ' + e.message + '</span>';
+    }
+    btn.disabled = false; btn.textContent = 'Research with AI ↗';
+  }
+
+  function useResearch() {
+    const cur = document.getElementById('context').value;
+    document.getElementById('context').value = (cur ? cur + '\n\n' : '') + researchSummary;
+    document.getElementById('researchOutput').style.display = 'none';
+  }
+
+  async function findProspects() {
+    const type = document.getElementById('findType').value;
+    const arrangement = document.getElementById('findArrangement').value;
+    const companyType = document.getElementById('findCompanyType').value;
+    const stack = document.getElementById('findStack').value;
+    const niche = document.getElementById('findNiche').value;
+
+    const typeMap = {
+      frontend_dev: 'remote front-end developer (HTML, CSS, JavaScript, React)',
+      hubspot_dev: 'HubSpot CMS developer (HubL, HubDB, custom modules)',
+      both: 'HubSpot developer OR front-end developer',
+      react_dev: 'remote React / Next.js developer',
+      cms_dev: 'CMS or web developer',
+      agency_contractor: 'freelance or contract web developer'
+    };
+    const arrangementMap = { remote: 'fully remote', hybrid: 'remote or hybrid', freelance: 'freelance or contract', any: 'any arrangement' };
+    const companyTypeMap = { any: 'any company type', agency: 'digital agencies or web studios', saas: 'SaaS companies', startup: 'startups', enterprise: 'enterprise or mid-market companies' };
+    const stackMap = { any: 'any stack', hubspot: 'HubSpot CMS', react: 'React or Next.js', jamstack: 'JAMstack or headless CMS' };
+
+    const btn = document.getElementById('findBtn');
+    btn.disabled = true; btn.textContent = 'Searching...';
+    document.getElementById('findStatus').innerHTML = '<span class="spinner"></span> Searching the web for live leads...';
+    document.getElementById('leadsOutput').innerHTML = '';
+
+    const prompt = `Search the web right now for real companies or job postings looking for a ${typeMap[type]}, ${arrangementMap[arrangement]}, at ${companyTypeMap[companyType]}, using ${stackMap[stack]}${niche ? ' in the ' + niche + ' space' : ''}.
+
+Find 6–8 specific, real prospects for Mark Wroblewski — a developer with:
+- 7+ years HubSpot CMS: themes, custom modules, HubL, HubDB, workflows
+- Strong front-end: JavaScript, React, CSS/SASS, Node.js, GraphQL, REST APIs
+- Built enterprise-scale sites for DocuWare (global SaaS)
+- HubSpot CMS Developer certified, Solutions Partner certified
+- Hudson Valley NY, open to remote full-time or freelance
+- Portfolio: markwroblewski.net
+
+Return ONLY a valid JSON array. No markdown, no backticks, no explanation. Each item: company (string), type (one of: hubspot_hire, frontend_hire, hubspot_agency, frontend_agency, freelance, startup), why (2–3 sentences on fit), signal (specific thing found), role (decision maker to contact), url (job posting or website).`;
+
+    try {
+      const data = await callAPI({
+        model: document.getElementById('modelSelect').value,
+        max_tokens: 2500,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{ role: 'user', content: prompt }]
+      });
+
+      const text = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+      const match = text.replace(/```json|```/g, '').trim().match(/\[[\s\S]*\]/);
+      if (!match) throw new Error('No leads returned — try different filters');
+      const leads = JSON.parse(match[0]);
+
+      document.getElementById('findStatus').innerHTML = `Found ${leads.length} prospects`;
+      document.getElementById('leadsOutput').innerHTML = leads.map((lead, i) => {
+        const [label, cls] = badgeInfo(lead.type || 'frontend_hire');
+        return `<div class="lead-card" data-type="${lead.type || 'frontend_hire'}" data-role="${lead.role || ''}">
+          <div class="lead-header">
+            <div>
+              <div class="lead-company">${lead.company}</div>
+              <div class="lead-signal">${lead.signal || ''}${lead.role ? ' · Contact: ' + lead.role : ''}</div>
+            </div>
+            <span class="badge ${cls}">${label}</span>
+          </div>
+          <div class="lead-why">${lead.why}</div>
+          <div class="lead-actions">
+            <button class="btn btn-sm" onclick="loadIntoGenerator(${i})">Write outreach ↗</button>
+            <button class="btn btn-sm" onclick="saveLeadToTracker(${i})">Save ↗</button>
+            ${lead.url ? `<a href="${lead.url}" target="_blank" class="btn btn-sm">View listing ↗</a>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+    } catch(e) {
+      document.getElementById('findStatus').innerHTML = '<span class="error">Search failed: ' + e.message + '</span>';
+    }
+    btn.disabled = false; btn.textContent = 'Find prospects ↗';
+  }
+
+  async function generate() {
+    const targetType = document.getElementById('targetType').value;
+    const companyName = document.getElementById('companyName').value || 'the company';
+    const contactName = document.getElementById('contactName').value || 'there';
+    const contactRole = document.getElementById('contactRole').value || '';
+    const context = document.getElementById('context').value || '';
+    const angle = document.getElementById('angle').value || '';
+
+    const typeDescriptions = {
+      hubspot_agency: 'HubSpot solution partner agency',
+      hubspot_hire: 'company hiring a HubSpot developer',
+      frontend_hire: 'company hiring a remote front-end developer',
+      frontend_agency: 'web or digital agency',
+      freelance: 'company posting a freelance/contract role',
+      startup: 'startup needing web development help'
+    };
+
+    const btn = document.getElementById('genBtn');
+    btn.disabled = true; btn.textContent = 'Generating...';
+    document.getElementById('genStatus').innerHTML = '<span class="spinner"></span> Writing your outreach...';
+    document.getElementById('outputSection').style.display = 'none';
+
+    const system = `You are a cold outreach copywriter helping Mark Wroblewski land new dev work.
+
+Mark's background:
+- 7+ years at DocuWare (global document management SaaS) building their entire HubSpot presence
+- HubSpot CMS: custom themes, modules, HubL, HubDB, workflows, CRM integrations
+- Front-end: JavaScript, React, CSS/SASS, Node.js, REST APIs, GraphQL
+- Projects: custom nav systems, HubDB gated resource libraries, Personio API careers integration, multi-brand case study platforms with advanced JS filtering
+- Certs: HubSpot CMS Developer, HubSpot Solutions Partner, Inbound Marketing
+- Portfolio: markwroblewski.net — Hudson Valley, NY — open to remote full-time or freelance
+- Brand: "Precision over noise" — deliberate, efficient, no unnecessary complexity
+
+Adapt pitch by type:
+- Front-end roles: lead with JS/React/CSS, mention HubSpot as bonus
+- HubSpot roles: lead with HubSpot CMS depth, back with front-end range
+- Agencies: emphasize fast ramp-up, autonomy, enterprise-scale experience
+- Freelance: emphasize flexibility, speed, end-to-end ownership
+
+Email under 150 words. LinkedIn DM under 80 words. Warm, direct, no fluff.
+Output ONLY valid JSON: {"email": "Subject: ...\\n\\n[body]", "linkedin": "[message]"}`;
+
+    try {
+      const data = await callAPI({
+        model: document.getElementById('modelSelect').value,
+        max_tokens: 1000,
+        system,
+        messages: [{ role: 'user', content: `Prospect:\n- Type: ${typeDescriptions[targetType]}\n- Company: ${companyName}\n- Contact: ${contactName}${contactRole ? ', ' + contactRole : ''}\n- Context: ${context || 'None'}\n- Angle: ${angle || 'General intro'}` }]
+      });
+      const raw = data.content.map(b => b.text || '').join('').replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(raw);
+      emailOutput = parsed.email || '';
+      linkedinOutput = parsed.linkedin || '';
+      document.getElementById('outputSection').style.display = 'block';
+      document.getElementById('outputText').textContent = activeTab === 'email' ? emailOutput : linkedinOutput;
+      document.getElementById('genStatus').innerHTML = '';
+      setTimeout(() => document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+    } catch(e) {
+      document.getElementById('genStatus').innerHTML = '<span class="error">Failed: ' + e.message + '</span>';
+    }
+    btn.disabled = false; btn.textContent = 'Generate outreach ↗';
+  }
+
+  loadProspects();
+</script>
+</body>
+</html>
