@@ -775,15 +775,15 @@
 
     const prompt = `Search the web right now for real companies or job postings looking for a ${typeMap[type]}, ${arrangementMap[arrangement]}, at ${companyTypeMap[companyType]}, using ${stackMap[stack]}${niche ? ' in the ' + niche + ' space' : ''}.
 
-Find 6–8 specific, real prospects for Mark Wroblewski — a developer with:
-- 7+ years HubSpot CMS: themes, custom modules, HubL, HubDB, workflows
+Find 6–8 specific, real prospects for Mark Wroblewski — a font-end developer & Hubspot developer with:
+- 7+ years HubSpot CMS: themes, custom modules, HubL, HubDB, workflows experience and several years
 - Strong front-end: JavaScript, React, CSS/SASS, Node.js, GraphQL, REST APIs
 - Built enterprise-scale sites for DocuWare (global SaaS)
 - HubSpot CMS Developer certified, Solutions Partner certified
 - Hudson Valley NY, open to remote full-time or freelance
 - Portfolio: markwroblewski.net
 
-Return ONLY a valid JSON array. No markdown, no backticks, no explanation. Each item: company (string), type (one of: hubspot_hire, frontend_hire, hubspot_agency, frontend_agency, freelance, startup), why (2–3 sentences on fit), signal (specific thing found), role (decision maker to contact), url (job posting or website).`;
+Return ONLY a valid JSON array. No markdown, no backticks, no explanation. Each item: company (string), type (one of: hubspot_hire, frontend_hire, hubspot_agency, frontend_agency, freelance, startup), why (2–3 sentences on fit), signal (specific thing found), role (decision maker to contact), url (job posting or website the job is listed on).`;
 
     try {
       const data = await callAPI({
@@ -848,7 +848,7 @@ Return ONLY a valid JSON array. No markdown, no backticks, no explanation. Each 
     const system = `You are a cold outreach copywriter helping Mark Wroblewski land new dev work.
 
 Mark's background:
-- 7+ years at DocuWare (global document management SaaS) building their entire HubSpot presence
+- 7+ years at DocuWare (global document management SaaS) constantly updating their entire HubSpot presence
 - HubSpot CMS: custom themes, modules, HubL, HubDB, workflows, CRM integrations
 - Front-end: JavaScript, React, CSS/SASS, Node.js, REST APIs, GraphQL
 - Projects: custom nav systems, HubDB gated resource libraries, Personio API careers integration, multi-brand case study platforms with advanced JS filtering
